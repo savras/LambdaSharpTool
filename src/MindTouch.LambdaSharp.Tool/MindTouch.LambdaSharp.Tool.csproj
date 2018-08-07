@@ -6,7 +6,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <PackageVersion>0.2.0-pre</PackageVersion>
     <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
-    <Version>0.2.0</Version>
+    <Version>0.2.0-rc1</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\MindTouch.LambdaSharp\LambdaFunctionParameter.cs" Link="LambdaFunctionParameter.cs"/>
