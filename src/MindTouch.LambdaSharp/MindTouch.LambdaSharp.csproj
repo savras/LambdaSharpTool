@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
     <PackageId>MindTouch.LambdaSharp</PackageId>
     <Version>0.2.0-rc1</Version>
