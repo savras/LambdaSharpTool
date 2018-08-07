@@ -58,12 +58,23 @@
         }
       }
     },
+    "VersionSsmParameter": {
+      "Type": "AWS::SSM::Parameter",
+      "Properties": {
+        "Type": "String",
+        "Description": "LambdaSharp module version",
+        "Value": "0.0.0.0",
+        "Name": "/Test/TestModule/Version"
+      }
+    },
     "RollbarToken": {
       "Type": "Custom::LambdaSharpRollbarProject",
       "Properties": {
         "ServiceToken": "arn:aws:sns:us-east-1:123456789012:LambdaSharpRollbar-RollbarCustomResourceTopic",
         "Tier": "Test",
-        "Module": "TestModule"
+        "Module": "TestModule",
+        "Project": "TestModule",
+        "Deployment": "Test"
       }
     },
     "ModuleRole": {
@@ -138,6 +149,13 @@
                     "sqs:SendMessage"
                   ],
                   "Resource": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic"
                 }
               ]
             },

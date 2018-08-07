@@ -118,20 +118,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // serialize stack to disk
             var result = true;
             var outputPath = Path.Combine(settings.WorkingDirectory, outputFilename);
-            try {
-                var template = new JsonStackSerializer().Serialize(stack);
-                File.WriteAllText(outputPath, template);
-                if(dryRun == null) {
-                    result = await new StackUpdater().Deploy(module, template, allowDataLoos);
-                }
-            } finally {
-
-                // remove dryrun file if it exists
-                if(File.Exists(outputPath)) {
-                    try {
-                        File.Delete(outputPath);
-                    } catch { }
-                }
+            var template = new JsonStackSerializer().Serialize(stack);
+            File.WriteAllText(outputPath, template);
+            if(dryRun == null) {
+                result = await new StackUpdater().Deploy(module, template, allowDataLoos);
+                try {
+                    File.Delete(outputPath);
+                } catch { }
             }
             Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
             return result;

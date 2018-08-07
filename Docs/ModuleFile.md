@@ -168,7 +168,7 @@ Parameters can be defined inline in plaintext, as secrets, imported from the [AW
 
 Parameters must have a `Name` and MAY have a `Description`. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
 
-The computed values are stored in the `parameters.json` file that is included with every function package, so that they can retrieved during function initialization.
+The computed values are stored in the `parameters.json` file that is included with every Lambda function deployment, so that they can retrieved during execution.
 
 ```yaml
 Name: String
@@ -178,6 +178,8 @@ Values:
   - String
 Secret: String
 Import: String
+Package:
+  PackageDefinition
 Export: String
 Resource:
   ResourceDefinition
@@ -206,7 +208,7 @@ The <tt>Description</tt> attribute specifies the parameter description used by t
 <dd>
 The <tt>Value</tt> attribute specifies the plaintext value for the parameter. When used in conjunction with the <tt>Resource</tt> section, the <tt>Value</tt> attribute must begin with <tt>arn:</tt> or be a global wildcard (i.e. <tt>*</tt>).
 
-<i>Required</i>: No. At most one <tt>Value</tt>, <tt>Values</tt>, <tt>Secret</tt>, or <tt>Import</tt> can be specified at a time.
+<i>Required</i>: No. At most one <tt>Value</tt>, <tt>Values</tt>, <tt>Secret</tt>, <tt>Import</tt>, or <tt>Package</tt> can be specified at a time.
 
 <i>Type</i>: String
 </dd>
@@ -217,7 +219,7 @@ The <tt>Values</tt> section is a list of plaintext values that are concatenated 
 
 The <tt>Values</tt> section cannot be used in conjunction with the <tt>Resource</tt> section.
 
-<i>Required</i>: No. At most one <tt>Value</tt>, <tt>Values</tt>, <tt>Secret</tt>, or <tt>Import</tt> can be specified at a time.
+<i>Required</i>: No. At most one <tt>Value</tt>, <tt>Values</tt>, <tt>Secret</tt>, <tt>Import</tt>, or <tt>Package</tt> can be specified at a time.
 
 <i>Type</i>: List of String
 </dd>
@@ -229,7 +231,7 @@ The <tt>Secret</tt> attribute specifies an encrypted value that is decrypted at 
 
 The <tt>Secret</tt> attribute cannot be used in conjunction with a <tt>Resource</tt> section or <tt>Export</tt> attribute.
 
-<i>Required</i>: No. At most one <tt>Value</tt>, <tt>Values</tt>, <tt>Secret</tt>, or <tt>Import</tt> can be specified at a time.
+<i>Required</i>: No. At most one <tt>Value</tt>, <tt>Values</tt>, <tt>Secret</tt>, <tt>Import</tt>, or <tt>Package</tt> can be specified at a time.
 
 <i>Type</i>: String
 </dd>
@@ -241,6 +243,15 @@ The <tt>Import</tt> attribute specifies a path to the AWS Systems Manager Parame
 <i>Required</i>: No. At most one <tt>Value</tt>, <tt>Values</tt>, <tt>Secret</tt>, or <tt>Import</tt> can be specified at a time.
 
 <i>Type</i>: String
+</dd>
+
+<dt><tt>Package</tt></dt>
+<dd>
+The <tt>Package</tt> section specifies local files with a destination S3 bucket and an optional destination key prefix. At build time, the λ# tool creates a package of the local files and automatically copies them to the destination S3 bucket during deployment.
+
+<i>Required</i>: No. At most one <tt>Value</tt>, <tt>Values</tt>, <tt>Secret</tt>, <tt>Import</tt>, or <tt>Package</tt> can be specified at a time.
+
+<i>Type</i>: [Package Definition](#package)
 </dd>
 
 <dt><tt>Export</tt></dt>
@@ -266,6 +277,44 @@ The <tt>Resource</tt> section cannot be used in conjunction with the <tt>Values<
 </dd>
 </dl>
 
+### Package
+
+The `Package` section specifies local files with a destination S3 bucket and an optional destination key prefix. At build time, the λ# tool creates a package of the local files and automatically copies them to the destination S3 bucket during deployment.
+
+```yaml
+Files: String
+Bucket: String
+Prefix: String
+```
+
+<dl>
+<dt><tt>Files</tt></dt>
+<dd>
+The <tt>Files</tt> attribute specifies a path to a local folder. The path can optionally have a wildcard suffix (e.g. <tt>*.json</tt>). If the wildcard suffix is omitted, all files and sub-folders are included, recursively. Otherwise, only the top folder and files matching the wildcard are included.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
+<dt><tt>Bucket</tt></dt>
+<dd>
+The <tt>Bucket</tt> attribute specifies the name of a resource parameter of type <tt>AWS::S3::Bucket</tt> that is the destination for the files.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
+<dt><tt>Prefix</tt></dt>
+<dd>
+The <tt>Prefix</tt> attribute specifies a key prefix that is prepended to all copied files.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
+</dl>
 
 ### Resource
 
@@ -423,6 +472,25 @@ The <tt>Sources</tt> section contains zero or more source definitions the Lambda
 ### Sources
 
 Sources invoke Lambda functions based on requests or events. The type of payload received by the invocation varies by source type. See the [λ# Samples](../Samples/) for how the handle the various sources.
+
+#### Alexa Source
+
+See [Alexa sample](../Samples/AlexaSample/) for an example of how to use an Alexa skill as source.
+
+```yaml
+Alexa: String
+```
+
+<dl>
+<dt><tt>Alexa</tt></dt>
+<dd>
+The <tt>Alexa</tt> attribute can either specify an Alexa Skill ID or the wildcard value (`"*'`) to allow any Alexa skill to invoke it.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+</dl>
 
 #### API Gateway Source
 
@@ -641,24 +709,5 @@ The <tt>BatchSize</tt> attribute specifies the maximum number of messages to fet
 <i>Required</i>: No
 
 <i>Type</i>: Int
-</dd>
-</dl>
-
-#### Alexa Source
-
-See [Alexa sample](../Samples/AlexaSample/) for an example of how to use an Alexa skill as source.
-
-```yaml
-Alexa: String
-```
-
-<dl>
-<dt><tt>Alexa</tt></dt>
-<dd>
-The <tt>Alexa</tt> attribute can either specify an Alexa Skill ID or the wildcard value (`"*'`) to allow any Alexa skill to invoke it.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
 </dd>
 </dl>

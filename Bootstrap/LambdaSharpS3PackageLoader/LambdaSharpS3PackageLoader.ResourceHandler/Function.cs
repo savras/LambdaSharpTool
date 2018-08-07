@@ -93,7 +93,7 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
                     await _transferUtility.UploadAsync(
                         memoryStream, 
                         properties.DestinationBucketName, 
-                        Path.Combine(properties.DestinationKeyPrefix, entry.FullName)
+                        Path.Combine(properties.DestinationKeyPrefix, entry.FullName).Replace('\\', '/')
                     );
                     entries.Add(entry.FullName);
                 }
@@ -144,7 +144,7 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
                 await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
                     BucketName = properties.DestinationBucketName,
                     Objects = entries.Take(MAX_BATCH_DELETE_OBJECTS).Select(entry => new KeyVersion {
-                        Key = Path.Combine(properties.DestinationKeyPrefix, entry)
+                        Key = Path.Combine(properties.DestinationKeyPrefix, entry).Replace('\\', '/')
                     }).ToList()
                 });
                 entries = entries.Skip(MAX_BATCH_DELETE_OBJECTS).ToList();

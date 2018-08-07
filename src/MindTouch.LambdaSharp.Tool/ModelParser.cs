@@ -424,90 +424,93 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(parameter.Package != null) {
                         ValidateNotBothStatements("Package", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
-                        if(parameter.Destination == null) {
-                            AddError("missing 'Destination' attribute");
-                        } else if(parameter.Destination.Bucket == null) {
-                            AtLocation("Destination", () => {
+
+                        // a package of one or more files
+                        var files = new List<string>();
+                        AtLocation("Package", () => {
+
+                            // check if package is nested
+                            if(resourcePrefix != "") {
+                                AddError("parameter package cannot be nested");
+                                return;
+                            }
+
+                            // check if required attributes are present
+                            if(parameter.Package.Files == null) {
+                                AddError("missing 'Files' attribute");
+                                return;
+                            }
+                            if(parameter.Package.Bucket == null) {
                                 AddError("missing 'Bucket' attribute");
-                            });
-                        } else {
+                                return;
+                            }
 
-                            // a package of one or more files
-                            var files = new List<string>();
-                            AtLocation("Package", () => {
+                            // TODO (2018-07-25, bjorg): verify `Parameters` sections contains a valid S3 bucket reference
+                            // var bucketParameterName = parameter.Destination.Bucket;
+                            // var bucketParameter = _app.Parameters.FirstOrDefault(param => param.Name == bucketParameterName);
+                            // if(bucketParameter == null) {
+                            //     AddError($"could not find parameter for S3 bucket: '{bucketParameterName}'");
+                            // } else if(!(bucketParameter is AResourceParameter resourceParameter)) {
+                            //     AddError($"parameter for S3 bucket is not a resource: '{bucketParameterName}'");
+                            // } else if(resourceParameter.Resource.Type != "AWS::S3::Bucket") {
+                            //     AddError($"parameter for S3 bucket must be an S3 bucket resource: '{bucketParameterName}'");
+                            // }
+                            
+                            // find all files that need to be part of the package
+                            string folder;
+                            string filePattern;
+                            SearchOption searchOption;
+                            var packageFiles = Path.Combine(_module.Settings.WorkingDirectory, parameter.Package.Files);
+                            if((packageFiles.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(packageFiles))) {
+                                folder = Path.GetFullPath(packageFiles);
+                                filePattern = "*";
+                                searchOption = SearchOption.AllDirectories;
+                            } else {
+                                folder = Path.GetDirectoryName(packageFiles);
+                                filePattern = Path.GetFileName(packageFiles);
+                                searchOption = SearchOption.TopDirectoryOnly;
+                            }
+                            files.AddRange(Directory.GetFiles(folder, filePattern, searchOption));
+                            files.Sort();
 
-                                // check if package is nested
-                                if(resourcePrefix != "") {
-                                    AddError("parameter package cannot be nested");
-                                    return;
-                                }
-
-                                // TODO (2018-07-25, bjorg): verify `Parameters` sections contains a valid S3 bucket reference
-                                // var bucketParameterName = parameter.Destination.Bucket;
-                                // var bucketParameter = _app.Parameters.FirstOrDefault(param => param.Name == bucketParameterName);
-                                // if(bucketParameter == null) {
-                                //     AddError($"could not find parameter for S3 bucket: '{bucketParameterName}'");
-                                // } else if(!(bucketParameter is AResourceParameter resourceParameter)) {
-                                //     AddError($"parameter for S3 bucket is not a resource: '{bucketParameterName}'");
-                                // } else if(resourceParameter.Resource.Type != "AWS::S3::Bucket") {
-                                //     AddError($"parameter for S3 bucket must be an S3 bucket resource: '{bucketParameterName}'");
-                                // }
-                                
-                                // find all files that need to be part of the package
-                                string folder;
-                                string filePattern;
-                                SearchOption searchOption;
-                                if((parameter.Package.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(parameter.Package))) {
-                                    folder = Path.GetFullPath(parameter.Package);
-                                    filePattern = "*";
-                                    searchOption = SearchOption.AllDirectories;
-                                } else {
-                                    folder = Path.GetDirectoryName(parameter.Package);
-                                    filePattern = Path.GetFileName(parameter.Package);
-                                    searchOption = SearchOption.TopDirectoryOnly;
-                                }
-                                files.AddRange(Directory.GetFiles(folder, filePattern, searchOption));
-                                files.Sort();
-
-                                // compute MD5 hash for package
-                                string package;
-                                using(var md5 = MD5.Create()) {
-                                    var bytes = new List<byte>();
-                                    foreach(var file in files) {
-                                        using(var stream = File.OpenRead(file)) {
-                                            bytes.AddRange(Encoding.UTF8.GetBytes(file));
-                                            bytes.AddRange(md5.ComputeHash(stream));
-                                        }
-                                    }
-                                    var hash = string.Concat(md5.ComputeHash(bytes.ToArray()).Select(x => x.ToString("X2")));
-                                    package = $"{_module.Name}-{parameter.Name}-Package-{hash}.zip";
-                                }
-
-                                // create zip package
-                                Console.WriteLine($"=> Building {parameter.Name} package");
-                                if(File.Exists(package)) {
-                                    try {
-                                        File.Delete(package);
-                                    } catch { }
-                                }
-                                using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Create)) {
-                                    foreach(var file in files) {
-                                        var filename = Path.GetRelativePath(folder, file);
-                                        zipArchive.CreateEntryFromFile(file, filename);
+                            // compute MD5 hash for package
+                            string package;
+                            using(var md5 = MD5.Create()) {
+                                var bytes = new List<byte>();
+                                foreach(var file in files) {
+                                    using(var stream = File.OpenRead(file)) {
+                                        bytes.AddRange(Encoding.UTF8.GetBytes(file));
+                                        bytes.AddRange(md5.ComputeHash(stream));
                                     }
                                 }
+                                var hash = string.Concat(md5.ComputeHash(bytes.ToArray()).Select(x => x.ToString("X2")));
+                                package = $"{_module.Name}-{parameter.Name}-Package-{hash}.zip";
+                            }
 
-                                // package value
-                                result = new PackageParameter {
-                                    Name = parameter.Name,
-                                    Description = parameter.Description,
-                                    Package = package,
-                                    Bucket = parameter.Destination.Bucket,
-                                    PackageS3Key = $"{_module.Name}/{package}",
-                                    Prefix = parameter.Destination.Prefix
-                                };
-                            });
-                        }
+                            // create zip package
+                            Console.WriteLine($"=> Building {parameter.Name} package");
+                            if(File.Exists(package)) {
+                                try {
+                                    File.Delete(package);
+                                } catch { }
+                            }
+                            using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Create)) {
+                                foreach(var file in files) {
+                                    var filename = Path.GetRelativePath(folder, file);
+                                    zipArchive.CreateEntryFromFile(file, filename);
+                                }
+                            }
+
+                            // package value
+                            result = new PackageParameter {
+                                Name = parameter.Name,
+                                Description = parameter.Description,
+                                Package = package,
+                                Bucket = parameter.Package.Bucket,
+                                PackageS3Key = $"{_module.Name}/{package}",
+                                Prefix = parameter.Package.Prefix ?? ""
+                            };
+                        });
                     } else if(parameter.Value != null) {
                         if(parameter.Resource != null) {
                             AtLocation("Resource", () => {
