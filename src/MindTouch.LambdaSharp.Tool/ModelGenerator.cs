@@ -381,7 +381,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private void AddFunction(Function function, IDictionary<string, object> environmentRefVariables) {
             var environmentVariables = function.Environment.ToDictionary(kv => kv.Key, kv => (dynamic)kv.Value);
             environmentVariables["TIER"] = _module.Settings.Tier;
-            environmentVariables["APPNAME"] = _module.Name;
+            environmentVariables["MODULE"] = _module.Name;
             environmentVariables["DEADLETTERQUEUE"] = _module.Settings.DeadLetterQueueUrl;
             environmentVariables["LOGGINGTOPIC"] = _module.Settings.LoggingTopicArn;
             environmentVariables["LAMBDARUNTIME"] = function.Runtime;
