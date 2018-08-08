@@ -572,8 +572,8 @@ namespace MindTouch.LambdaSharp.Tool {
             } else {
                 resourceType = AtLocation("Type", () => {
                     if(resource.Type.StartsWith("Custom::")) {
-                        if(resource.ServiceTokenImport is string serviceTokenImport) {
-                            if(!_importer.TryGetValue(serviceTokenImport, out string importedValue)) {
+                        if(resource.ImportServiceToken is string importServiceToken) {
+                            if(!_importer.TryGetValue(importServiceToken, out string importedValue)) {
                                 AddError("unable to find custom resource handler topic");
                                 return "<BAD>";
                             }
@@ -1217,9 +1217,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
                                     // confirm the custom resource has a `ServiceToken` specified or imports one
                                     if(resourceType.StartsWith("Custom::") || (resourceType == "AWS::CloudFormation::CustomResource")) {
-                                        if(param.Resource.ServiceTokenImport != null) {
-                                            param.Resource.ServiceTokenImport = param.Resource.ServiceTokenImport;
-                                            _importer.Add(param.Resource.ServiceTokenImport);
+                                        if(param.Resource.ImportServiceToken != null) {
+                                            param.Resource.ImportServiceToken = param.Resource.ImportServiceToken;
+                                            _importer.Add(param.Resource.ImportServiceToken);
                                         } else {
                                             AtLocation("Properties", () => {
                                                 if(!(param.Resource.Properties?.ContainsKey("ServiceToken") ?? false)) {
@@ -1248,11 +1248,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
                                     // check if custom resource needs a service token to be retrieved
                                     if(!(param.Resource.Properties?.ContainsKey("ServiceToken") ?? false)) {
-                                        var serviceTokenImport = $"/{_module.Settings.Tier}"
+                                        var importServiceToken = $"/{_module.Settings.Tier}"
                                             + $"/{customResourceHandlerAndType[0]}"
                                             + $"/{customResourceHandlerAndType[1]}CustomResourceTopic";
-                                        param.Resource.ServiceTokenImport = serviceTokenImport;
-                                        _importer.Add(serviceTokenImport);    
+                                        param.Resource.ImportServiceToken = importServiceToken;
+                                        _importer.Add(importServiceToken);    
                                     }
                                 });
                             });
