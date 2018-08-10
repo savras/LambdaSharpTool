@@ -113,7 +113,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // convert 'Version' attribute to implicit 'Version' parameter
             if(module.Version == null) {
-                module.Version = "0.0.0.0";
+                module.Version = "1.0";
             }
             if(Version.TryParse(module.Version, out System.Version _)) {
                 module.Parameters.Add(new ParameterNode {
@@ -122,6 +122,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     Description = "LambdaSharp module version",
                     Export = "Version"
                 });
+
+                // append the version to the module description
+                if(_module.Description != null) {
+                    _module.Description = _module.Description.TrimEnd() + $" (v{module.Version})";
+                }
             } else {
                 AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
             }
@@ -455,7 +460,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             // } else if(resourceParameter.Resource.Type != "AWS::S3::Bucket") {
                             //     AddError($"parameter for S3 bucket must be an S3 bucket resource: '{bucketParameterName}'");
                             // }
-                            
+
                             // find all files that need to be part of the package
                             string folder;
                             string filePattern;
@@ -933,7 +938,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // TODO (2018-06-27, bjorg): missing expression validation
                         return new ScheduleSource {
                             Expression = source.Schedule,
-                            Name = source.Name  
+                            Name = source.Name
                         };
                     }, null);
                 }
@@ -1048,8 +1053,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 if(source.Alexa != null) {
                     return AtLocation("Alexa", () => {
-                        var alexaSkillId = (string.IsNullOrWhiteSpace(source.Alexa) || source.Alexa == "*") 
-                            ? null 
+                        var alexaSkillId = (string.IsNullOrWhiteSpace(source.Alexa) || source.Alexa == "*")
+                            ? null
                             : source.Alexa;
                         return new AlexaSource {
                             EventSourceToken = alexaSkillId
@@ -1173,7 +1178,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
                 } else {
                     if(
-                        (Settings.EnvironmentVersion.Major != Settings.ToolVersion.Major) 
+                        (Settings.EnvironmentVersion.Major != Settings.ToolVersion.Major)
                         || (Settings.EnvironmentVersion.Minor != Settings.ToolVersion.Minor)
                     ) {
                         AddError($"LambdaSharp Tool (v{Settings.ToolVersion}) and Environment (v{Settings.EnvironmentVersion}) Versions do not match", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
@@ -1252,7 +1257,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                             + $"/{customResourceHandlerAndType[0]}"
                                             + $"/{customResourceHandlerAndType[1]}CustomResourceTopic";
                                         param.Resource.ServiceTokenImport = serviceTokenImport;
-                                        _importer.Add(serviceTokenImport);    
+                                        _importer.Add(serviceTokenImport);
                                     }
                                 });
                             });
