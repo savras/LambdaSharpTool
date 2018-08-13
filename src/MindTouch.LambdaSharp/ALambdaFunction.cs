@@ -168,7 +168,7 @@ namespace MindTouch.LambdaSharp {
                 gitsha
             ));
             _rollbarEnabled = (rollbarAccessToken != null);
-            LogInfo($"Rollbar = {(_rollbarEnabled ? "ENABLED" : "DISABLED")}");
+            LogInfo($"ROLLBAR = {(_rollbarEnabled ? "ENABLED" : "DISABLED")}");
 
             // local functions
             async Task<Dictionary<string, string>> ParseParameters(string parameterPrefix, string json) {
@@ -258,7 +258,7 @@ namespace MindTouch.LambdaSharp {
                     try {
 
                         // send exception to error-topic
-                        payload = _rollbarClient.CreatePayload(MAX_SNS_SIZE, level.ToString(), exception, format, args);                
+                        payload = _rollbarClient.CreatePayload(MAX_SNS_SIZE, level.ToString(), exception, format, args);
                     } catch(Exception e) {
                         Log(LambdaLogLevel.ERROR, "rollbar CreatePayload exception", e.ToString());
                         return;
