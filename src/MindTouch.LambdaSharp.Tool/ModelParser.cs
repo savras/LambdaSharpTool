@@ -113,7 +113,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // convert 'Version' attribute to implicit 'Version' parameter
             if(module.Version == null) {
-                module.Version = "0.0.0.0";
+                module.Version = "1.0";
             }
             if(Version.TryParse(module.Version, out System.Version _)) {
                 module.Parameters.Add(new ParameterNode {
@@ -122,6 +122,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     Description = "LambdaSharp module version",
                     Export = "Version"
                 });
+
+                // append the version to the module description
+                if(_module.Description != null) {
+                    _module.Description = _module.Description.TrimEnd() + $" (v{module.Version})";
+                }
             } else {
                 AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
             }
@@ -455,7 +460,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             // } else if(resourceParameter.Resource.Type != "AWS::S3::Bucket") {
                             //     AddError($"parameter for S3 bucket must be an S3 bucket resource: '{bucketParameterName}'");
                             // }
-                            
+
                             // find all files that need to be part of the package
                             string folder;
                             string filePattern;
@@ -479,12 +484,16 @@ namespace MindTouch.LambdaSharp.Tool {
                                 var bytes = new List<byte>();
                                 foreach(var file in files) {
                                     using(var stream = File.OpenRead(file)) {
-                                        bytes.AddRange(Encoding.UTF8.GetBytes(file));
-                                        bytes.AddRange(md5.ComputeHash(stream));
+                                        var relativeFilePath = Path.GetRelativePath(folder, file);
+                                        bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
+                                        var fileHash = md5.ComputeHash(stream);
+                                        bytes.AddRange(fileHash);
+                                        if(_module.Settings.VerboseLevel >= VerboseLevel.Detailed) {
+                                            Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
+                                        }
                                     }
                                 }
-                                var hash = string.Concat(md5.ComputeHash(bytes.ToArray()).Select(x => x.ToString("X2")));
-                                package = $"{_module.Name}-{parameter.Name}-Package-{hash}.zip";
+                                package = $"{_module.Name}-{parameter.Name}-Package-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip";
                             }
 
                             // create zip package
@@ -820,25 +829,29 @@ namespace MindTouch.LambdaSharp.Tool {
                             File.Delete(zipTempPackage);
                         }
 
-                        // compute MD5 hash
+                        // compute MD5 hash for lambda function
                         var files = new List<string>();
                         using(var md5 = MD5.Create()) {
                             var bytes = new List<byte>();
                             files.AddRange(Directory.GetFiles(tempDirectory, "*", SearchOption.AllDirectories));
                             files.Sort();
                             foreach(var file in files) {
+                                var relativeFilePath = Path.GetRelativePath(tempDirectory, file);
                                 var filename = Path.GetFileName(file);
 
                                 // don't include the `gitsha.txt` since it changes with every build
                                 if(filename != GITSHAFILE) {
                                     using(var stream = File.OpenRead(file)) {
-                                        bytes.AddRange(Encoding.UTF8.GetBytes(file));
-                                        bytes.AddRange(md5.ComputeHash(stream));
+                                        bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
+                                        var fileHash = md5.ComputeHash(stream);
+                                        bytes.AddRange(fileHash);
+                                        if(_module.Settings.VerboseLevel >= VerboseLevel.Detailed) {
+                                            Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
+                                        }
                                     }
                                 }
                             }
-                            var hash = string.Concat(md5.ComputeHash(bytes.ToArray()).Select(x => x.ToString("X2")));
-                            package = Path.Combine(_module.Settings.WorkingDirectory, $"{projectName}-{hash}.zip");
+                            package = Path.Combine(_module.Settings.WorkingDirectory, $"{projectName}-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                         }
 
                         // compress folder contents
@@ -933,7 +946,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // TODO (2018-06-27, bjorg): missing expression validation
                         return new ScheduleSource {
                             Expression = source.Schedule,
-                            Name = source.Name  
+                            Name = source.Name
                         };
                     }, null);
                 }
@@ -1048,8 +1061,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 if(source.Alexa != null) {
                     return AtLocation("Alexa", () => {
-                        var alexaSkillId = (string.IsNullOrWhiteSpace(source.Alexa) || source.Alexa == "*") 
-                            ? null 
+                        var alexaSkillId = (string.IsNullOrWhiteSpace(source.Alexa) || source.Alexa == "*")
+                            ? null
                             : source.Alexa;
                         return new AlexaSource {
                             EventSourceToken = alexaSkillId
@@ -1173,7 +1186,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
                 } else {
                     if(
-                        (Settings.EnvironmentVersion.Major != Settings.ToolVersion.Major) 
+                        (Settings.EnvironmentVersion.Major != Settings.ToolVersion.Major)
                         || (Settings.EnvironmentVersion.Minor != Settings.ToolVersion.Minor)
                     ) {
                         AddError($"LambdaSharp Tool (v{Settings.ToolVersion}) and Environment (v{Settings.EnvironmentVersion}) Versions do not match", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
