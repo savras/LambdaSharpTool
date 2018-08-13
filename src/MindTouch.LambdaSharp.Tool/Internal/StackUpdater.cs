@@ -54,13 +54,13 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
         private static bool IsFinalStackEvent(StackEvent evt)
             => (evt.ResourceType == "AWS::CloudFormation::Stack") && _finalStates.Contains(evt.ResourceStatus);
-        
+
         private static bool IsSuccessfulFinalStackEvent(StackEvent evt)
-            => (evt.ResourceType == "AWS::CloudFormation::Stack") 
+            => (evt.ResourceType == "AWS::CloudFormation::Stack")
                 && ((evt.ResourceStatus == "CREATE_COMPLETE") || (evt.ResourceStatus == "UPDATE_COMPLETE"));
 
         //--- Methods ---
-        public async Task<bool> Deploy(Module module, string template, bool allowDataLoss) {
+        public async Task<bool> Deploy(Module module, string template, bool allowDataLoss, bool protectStack) {
             var stackName = $"{module.Settings.Tier}-{module.Name}";
             Console.WriteLine($"Deploying stack: {stackName}");
 
@@ -126,7 +126,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             }
 
             // default stack policy denies all updates
-            var stackPolicyBody = 
+            var stackPolicyBody =
 @"{
     ""Statement"": [{
         ""Effect"": ""Allow"",
@@ -162,7 +162,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
         }
     }]
 }";
-            var stackDuringUpdatePolicyBody = 
+            var stackDuringUpdatePolicyBody =
 @"{
     ""Statement"": [{
         ""Effect"": ""Allow"",
@@ -213,7 +213,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                     OnFailure = OnFailure.DELETE,
                     NotificationARNs = notificationArns,
                     StackPolicyBody = stackPolicyBody,
-                    EnableTerminationProtection = true,
+                    EnableTerminationProtection = protectStack,
                     TemplateURL = templateUrl,
                     TemplateBody = (templateUrl == null) ? template : null
                 };

@@ -16,7 +16,7 @@ The `deploy` command parses the input file, compiles all included function proje
 
 The default filename for the module file is `Deploy.yml` in the current working directory. If the file has a different name or is not in the current directory, it must be specified as an argument on the command line.
 
-CloudFormation stacks created by the λ# tool have termination protection enabled. In addition, subsequent updates cannot delete or replace data resources unless the `--allow-data-loss` option is passed in. This behavior is to reduce the risk of accidental data loss when CloudFormation resources are being accidentally replaced.
+CloudFormation stacks created by the λ# tool have termination protection enabled when deployed with the `--protect` option. In addition, subsequent updates cannot delete or replace data resources unless the `--allow-data-loss` option is passed in. This behavior is to reduce the risk of accidental data loss when CloudFormation resources are being accidentally replaced.
 
 ```
 > lash deploy --tier Demo
@@ -55,6 +55,8 @@ lash deploy Deploy.yml
 <dd>(optional) Name of generated CloudFormation template file (default: cloudformation.json)</dd>
 <dt><tt>--allow-data-loss</tt></dt>
 <dd>(optional) Allow CloudFormation resource update operations that could lead to data loss</dd>
+<dt><tt>--protect</tt></dt>
+<dd>(optional) Enable termination protection for the CloudFormation stack</dd>
 <dt><tt>--profile|-P &lt;NAME&gt;</tt></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
 <dt><tt>--verbose|-V[:&lt;LEVEL&gt;]</tt></dt>

@@ -40,6 +40,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
                 var outputFilename = cmd.Option("--output <FILE>", "(optional) Name of generated CloudFormation template file (default: cloudformation.json)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
+                var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -75,7 +76,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings,
                             dryRun,
                             outputFilename.Value() ?? "cloudformation.json",
-                            allowDataLossOption.HasValue()
+                            allowDataLossOption.HasValue(),
+                            protectStackOption.HasValue()
                         )) {
                             break;
                         }
@@ -88,7 +90,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Settings settings,
             DryRunLevel? dryRun,
             string outputFilename,
-            bool allowDataLoos
+            bool allowDataLoos,
+            bool protectStack
         ) {
             var stopwatch = Stopwatch.StartNew();
 
@@ -121,7 +124,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var template = new JsonStackSerializer().Serialize(stack);
             File.WriteAllText(outputPath, template);
             if(dryRun == null) {
-                result = await new StackUpdater().Deploy(module, template, allowDataLoos);
+                result = await new StackUpdater().Deploy(module, template, allowDataLoos, protectStack);
                 try {
                     File.Delete(outputPath);
                 } catch { }
