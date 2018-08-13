@@ -58,7 +58,7 @@ Functions:
 
 Releases are named after Greek philosophers.
 
-## Brontinus (v0.2-rc1) - 2018-08-07
+## Brontinus (v0.2) - 2018-08-13
 
 * Revised λ# nomenclature, which introduced breaking changes for the module files
 * Added support for Alexa Skill invocation sources

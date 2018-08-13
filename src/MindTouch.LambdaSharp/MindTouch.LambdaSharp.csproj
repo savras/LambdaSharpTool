@@ -3,7 +3,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
     <PackageId>MindTouch.LambdaSharp</PackageId>
-    <Version>0.2.0-rc1</Version>
+    <Version>0.2.0</Version>
     <Title>MindTouch λ#</Title>
     <Description>A serverless framework for rapid application development on AWS Lambda</Description>
     <Company>MindTouch, Inc.</Company>
@@ -14,12 +14,12 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/LambdaSharp/master/Docs/LambdaSharp_v2_small.png</PackageIconUrl>
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;MindTouch;Serverless</PackageTags>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)'=='NugetPublish' ">  
-      <DebugSymbols>false</DebugSymbols>  
-      <Optimize>true</Optimize>  
-      <OutputPath>.\bin\Release\</OutputPath>  
-      <DefineConstants>RELEASE;TRACE</DefineConstants>  
-  </PropertyGroup>  
+  <PropertyGroup Condition=" '$(Configuration)'=='NugetPublish' ">
+      <DebugSymbols>false</DebugSymbols>
+      <Optimize>true</Optimize>
+      <OutputPath>.\bin\Release\</OutputPath>
+      <DefineConstants>RELEASE;TRACE</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="1.1.3"/>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
