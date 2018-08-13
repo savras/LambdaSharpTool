@@ -1186,7 +1186,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
                 } else {
                     if(Settings.EnvironmentVersion != Settings.ToolVersion) {
-                        AddError($"LambdaSharp Tool (v{Settings.ToolVersion}) and Environment (v{Settings.EnvironmentVersion}) Versions do not match", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
+                        AddError($"LambdaSharp Tool (v{Settings.ToolVersion}) and Environment (v{Settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
                     }
                 }
             }
