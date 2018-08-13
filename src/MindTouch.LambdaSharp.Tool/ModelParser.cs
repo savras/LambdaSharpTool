@@ -484,12 +484,16 @@ namespace MindTouch.LambdaSharp.Tool {
                                 var bytes = new List<byte>();
                                 foreach(var file in files) {
                                     using(var stream = File.OpenRead(file)) {
-                                        bytes.AddRange(Encoding.UTF8.GetBytes(file));
-                                        bytes.AddRange(md5.ComputeHash(stream));
+                                        var relativeFilePath = Path.GetRelativePath(folder, file);
+                                        bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
+                                        var fileHash = md5.ComputeHash(stream);
+                                        bytes.AddRange(fileHash);
+                                        if(_module.Settings.VerboseLevel >= VerboseLevel.Detailed) {
+                                            Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
+                                        }
                                     }
                                 }
-                                var hash = string.Concat(md5.ComputeHash(bytes.ToArray()).Select(x => x.ToString("X2")));
-                                package = $"{_module.Name}-{parameter.Name}-Package-{hash}.zip";
+                                package = $"{_module.Name}-{parameter.Name}-Package-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip";
                             }
 
                             // create zip package
@@ -825,25 +829,29 @@ namespace MindTouch.LambdaSharp.Tool {
                             File.Delete(zipTempPackage);
                         }
 
-                        // compute MD5 hash
+                        // compute MD5 hash for lambda function
                         var files = new List<string>();
                         using(var md5 = MD5.Create()) {
                             var bytes = new List<byte>();
                             files.AddRange(Directory.GetFiles(tempDirectory, "*", SearchOption.AllDirectories));
                             files.Sort();
                             foreach(var file in files) {
+                                var relativeFilePath = Path.GetRelativePath(tempDirectory, file);
                                 var filename = Path.GetFileName(file);
 
                                 // don't include the `gitsha.txt` since it changes with every build
                                 if(filename != GITSHAFILE) {
                                     using(var stream = File.OpenRead(file)) {
-                                        bytes.AddRange(Encoding.UTF8.GetBytes(file));
-                                        bytes.AddRange(md5.ComputeHash(stream));
+                                        bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
+                                        var fileHash = md5.ComputeHash(stream);
+                                        bytes.AddRange(fileHash);
+                                        if(_module.Settings.VerboseLevel >= VerboseLevel.Detailed) {
+                                            Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
+                                        }
                                     }
                                 }
                             }
-                            var hash = string.Concat(md5.ComputeHash(bytes.ToArray()).Select(x => x.ToString("X2")));
-                            package = Path.Combine(_module.Settings.WorkingDirectory, $"{projectName}-{hash}.zip");
+                            package = Path.Combine(_module.Settings.WorkingDirectory, $"{projectName}-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                         }
 
                         // compress folder contents
