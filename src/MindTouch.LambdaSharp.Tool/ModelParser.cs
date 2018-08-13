@@ -1185,10 +1185,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(Settings.EnvironmentVersion == null) {
                     AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
                 } else {
-                    if(
-                        (Settings.EnvironmentVersion.Major != Settings.ToolVersion.Major)
-                        || (Settings.EnvironmentVersion.Minor != Settings.ToolVersion.Minor)
-                    ) {
+                    if(Settings.EnvironmentVersion != Settings.ToolVersion) {
                         AddError($"LambdaSharp Tool (v{Settings.ToolVersion}) and Environment (v{Settings.EnvironmentVersion}) Versions do not match", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
                     }
                 }
@@ -1265,7 +1262,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                             + $"/{customResourceHandlerAndType[0]}"
                                             + $"/{customResourceHandlerAndType[1]}CustomResourceTopic";
                                         param.Resource.ImportServiceToken = importServiceToken;
-                                        _importer.Add(importServiceToken);    
+                                        _importer.Add(importServiceToken);
                                     }
                                 });
                             });
